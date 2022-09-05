@@ -1,0 +1,228 @@
+---
+title: "Analisis Estadístico de las Exportaciones del Café Colombiano"
+author: "Josbe Urquijo, Ramiro Payares, Miler Blanco, Luis Oñate"
+date: '2022-08-27'
+linkcolor: blue
+urlcolor: blue
+fontsize: 10pt
+linestretch: "1.5"
+output:
+  pdf_document: default
+  word_document: default
+  html_document:
+    df_print: paged
+
+
+
+header-includes: 
+- \usepackage[spanish]{babel}
+- \usepackage{rotating}
+- \usepackage{caption}
+- \usepackage{lipsum}
+- \usepackage{float}
+- \usepackage{subcaption}
+- \usepackage{hyperref}
+- \usepackage{longtable}
+- \floatplacement{figure}{H}
+- \usepackage{titling}
+  
+toc: no
+number_sections: yes
+---
+
+```{r, Chunk, setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,Library, include=FALSE, eval=TRUE}
+library(ggplot2)
+library(dplyr)
+library(corrr)
+library(PerformanceAnalytics)
+library(psych)
+library(apaTables)
+library(foreign)
+library(priceR) 
+library(scales)
+library(openxlsx)
+library(gridExtra)
+library(knitr)
+```
+
+```{r, import data, warning=FALSE, message=FALSE, eval=TRUE, echo=TRUE, include=FALSE, comment=""}
+val_exp <- read.xlsx("E://BDatos//val_exp_men.xlsx")
+```
+
+# Resumen
+La federación Nacional de Cafeteros en colombia; organización encargada de la regularización de las importaciones y exportaciones del café colombiano cuenta con un sistema de información relacionada con datos acerca de los precios, áreas cultivadas por hectáreas el cual cubre un extenso periodo iniciado décadas anteriores y que hoy serán objeto de estudio, cuyo objetivo es identificar las relaciones que existen en el volumen de exportaciones respecto a factores como la inflación que determinan valores adquiridos al momento de realizar ajustes presupuestales, además se busca entender el comportamiento de estos mismos datos para robustecer teorías actuales condicionadas a ciertas expectativas que se consideren necesarias para resolver determinado caso. En la presente investigación desarrollada puede apreciar los respectivos análisis expuestos conforme a los distintos datos observados de la (FNC) Federación Nacional de Cafeteros que a lo largo de los años a recogido y objetivamente a utilizado en las indispensables políticas públicas, además de ostentar al fortalecimiento de los medianos grandes y pequeños productores del café colombiano que han contribuido en mejorar el aprovechamiento de la tierra e incursionar al campesinado a la preservación del agro colombiano. 
+
+## Introducción
+
+A Continuación podrá observar los análisis realizados a las exportaciones del café colombiano de productores particulares y de aquellos que hacen parte de la Federación Nacional de Cafeteros, en dichos procedimientos se llevaron a cabo una serie de trabajo enfocados en determinar y/o identificar tendencias de comportamientos tales como gráficos de dispersiones con respectivas regresiones lineales, análisis cuantitativos de correlación media y desviación estándar; además la estandarización del dólar estadounidense y la visualizaciones comparativas entre los valores de exportación de la FNC y la de productores particulares. Por otro lado el incremento del dólar y como consecuencia el incremento en las mismas exportaciones.
+
+# Estandarización de Precios 
+Los datos de las exportaciones de los prodcutores que hacen parte de la federación Nacional de cafeteros y particulares se procedieron a estandarizar estos mismos al valor actual en dolar estadounidense y posteriormente a realizar dichas comparaciones en los distintos analisis correspondiente a la dispersión de dos variables y ver como el valor de las exportaciones, la inflación y las distintas causas que condicionan a las elevaciones y decaidas en las exportaciones, por otro lado a continuación podra observar la estandarización del dolar correspodiente para el año 2000 que posterior al año anterior equivale a 1.57 dolares actualmente y en pesos colombianos alrededor de unos 7000 mil pesos.
+
+```{r , warning=FALSE, message=FALSE, echo=TRUE, eval=TRUE, comment="", include=TRUE}
+
+#Estandarización de un dolar Estadounidense
+
+country <- "United States"
+countries_dataframe <- show_countries()
+inflation_dataframe <- retrieve_inflation_data(country)
+adjust_for_inflation(1, 2000 , country = country, to_date = 2021,
+                     inflation_dataframe = inflation_dataframe,
+                     countries_dataframe = countries_dataframe)
+
+```
+
+Tomados los datos correspondientes a los millones de dólares en ventas del café procedentes de los registros entre la década del 2000 a 2009, los cuales tomamos como referencia exacta el mes de enero entre el intervalo mencionado anteriormente. Procesamos y graficamos a lo largo de la década cada uno de los valores que representan la exportación de FNC en millones de dólares, los cuales fueron convertidos a precios actuales, teniendo como referencia cuanto costaba un dólar en cada uno de los años pertenecientes al intervalo tomado. Ilustrada gráficamente la relación entre la cantidad de millones de dólares en ventas a lo largo de cada uno de los meses de enero correspondiente a la década de 2000 a 2009, los meses de enero de estos años superaron la media en ventas registradas durante esta década, los cuales fueron ventas muy favorables teniendo en cuenta sólo los meses de enero. Por otra parte  podemos describir que, a pesar de la dispersión entre los datos de cada una de las ventas en millones de dólares, estas ventas tendieron a tener un crecimiento positivo muy significativo, realzando los registros de ventas del café por parte de los productores asociados en La Federación Nacional del Cafeteros.
+
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, eval=TRUE, comment="", include=TRUE}
+#valores actuales anteriores de las exportaciones de la FNC en miles de dolares
+#mes de enero - decada del 2000
+
+val_fnc <- data_frame("Anos"= c(2000,2001,2002,2003,2004,
+                                   2005,2006,2007,2008,2009),
+                         "va_ant"= c(25.8,16.3,17.3,13.0,24.7,
+                                  36.1,37.5,32.4,42.5,36.4),
+                         "Mes"= c("enero","enero","enero","enero"
+                                  ,"enero","enero","enero",
+                                  "enero","enero","enero"),
+                         "va_dolar" =c(1.57,1.53,1.50,1.47,
+                                      1.43,1.38,1.34,1.30,1.25,1.26),
+                         "va_actl" = c(40.506,24.939,25.95,19.11,35.321,
+                                       49.818,50.25,42.12,53.125,45.864))
+
+#Grafico del valor actual de las exportaciones respecto a los años 
+
+val_fnc %>% 
+  filter(Mes=='enero') %>%
+  ggplot(aes(x=Anos, y=va_actl, col=Mes))+ 
+  geom_point()+ xlab('Años')+geom_smooth(method = 'lm')+ 
+  ylab('Valor de la exportación FNC en dolar')+
+  ggtitle('Valor de las Exportaciones de la FNC')+
+  theme(plot.title = element_text(color =  "black", size = 12, hjust = 0.5))
+```
+
+La exportación de café en enero del año 2000 fue de 58.6 millones dólares, en el mes siguiente ocurre un aumento en ventas de exportación del café, respecto al mes anterior marzo, disminuyen las ventas respecto a los meses ya que en este mes hubo aumentos en temperaturas y sequías continuas, en el cual afecta la producción significativamente, disminuyendo las exportaciones. Los siguientes cinco mese vuelve a aumentar la exportación y se mantienen precios altos, en septiembre la  exportaciones disminuyó y tuvo un valor de 53.3 millones de dólares,  en octubre incrementa a un valor aproximado de 62,3 millones de dólares y para  noviembre se dispara obteniendo el valor más alto referente al año 2000 con un precio equivalente de 92.7millones de dólares, en el último mes del año analizado  la exportación del café no logra mantenerse y disminuye respecto al mes anterior con un valor de 57,2 millones de dólares equilibrandose  respecto a los demás  valores de exportación del año 2000.  
+
+```{r particulares, warning=FALSE, message=FALSE, echo=TRUE, eval=TRUE,comment="", include=TRUE}
+
+#Valores actuales de los productores particulares de los meses del año 2000
+#moneda en dolar 
+
+val_pa <- data_frame("meses"= c("enero","febrero","marzo","abril",
+                                "mayo","junio","julio","agosto",
+                                "septiembre","octubre","nobiembre", "diciembre"),
+                         "va_ex"= c(58.6,67.7,37.8,73.3,54.3,84.4,
+                                    55.9,70.5,54.3,62.3,92.7,57.2),
+                         "va_act"= c(92.00,101.57,59.34,115.08,85.25,132.50,
+                                     87.76,110.68,85.25,97.81,145.93,89.80))
+
+#Grafico de dispersión de los meses del año 2000 respecto a el valor actual y anterior
+
+val_pa %>%  
+  filter(meses=='enero'| meses=='febrero' | meses=='marzo'
+         | meses=='abril'|meses=='mayo'
+         | meses=='junio' | meses=='julio' 
+         |meses=='agosto' | meses=='septiembre' 
+         | meses=='octubre' | meses=='noviembre' | meses=='diciembre') %>%
+  ggplot(aes(x=va_ex, y=va_act, col=meses))+ 
+  geom_point()+ xlab('Valor Exportaciones')+ ylab('Valo Actual en dolar')+
+  ggtitle('Exportaciones de Productores Particulares Año 2000')+
+  theme(plot.title = element_text(color =  "black", size = 12, hjust = 0.5))
+```
+
+
+# Exportaciones de la FNC y productores particulares 
+
+De acuerdo a los datos recogidos de la federación Nacional se puede observar una tasa de crecimiento para el mes agosto respecto a junio concluyendo cómo este mantiene una tendencia y que debido a factores concurrentes ha provocado que estadísticamente haya sido un mes significativo en la recolección y posterior venta en los centros de acopio del café colombiano. parte de nuestra investigación logró comprobar esta tendencia en entre junio y agosto y como resultado se pudo observar que las zonas con mayor índice de exportaciones tales como Europa las condiciones climáticas varían respecto a temperaturas considerablemente bajas aumentando la demanda de este mismo.
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, eval=TRUE, comment="", include=TRUE}
+
+#grafico de dispersión - comparación entre el mes de junio y agosto del 2000
+#Estos valores estan sin estandarizar 
+
+val_exp %>% 
+  filter(MES=="enero" |MES=="febrero"| MES=="marzo"|
+           MES=="abril"| MES=="mayo"| MES=="junio"|
+           MES=="julio" |MES=="agosto" | MES=="septiembre"|
+           MES=="octubre"| MES=="noviembre"|
+           MES=="diciembre") %>%
+  ggplot(aes(x=ANO, y=TOTAL, col=MES))+ 
+  geom_point()+ xlab('Años')+
+  ylab('Total de exportaciones - millones de dolares')+
+  ggtitle('Valor de las Exportaciones de la FNC y Particulares')+
+  theme(plot.title = element_text(color =  "black", size = 10, hjust = 0.5))
+
+
+```
+
+## Promedio y Desviación de la FNC y Particulares
+
+Realizados los siguientes analisis pudimos obtener la media de los valores de las exportaciones estandarizados en milllones de dolares que significativamente muestra como el valor en las exportaciones se han elevado considerablemente dejando alrededor de este valor una media de 38.7003 y una desviación estandar del 11.91865 con respecto a los meses de enero de cada año.
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, eval=TRUE, comment="", include=TRUE}
+
+#Promedio y desviación del valor actual o estandarizado 
+# exportaciones en el año 2000- 2009
+
+m <- val_fnc %>%
+  filter(Mes=="enero" |Mes=="enero"| Mes=="enero"|
+           Mes=="enero"| Mes=="enero"| Mes=="enero"|
+           Mes=="enero" | Mes=="enero"| Mes=="enero"| Mes=="enero") 
+cat("Promedio de las exportaciones productor FNC Enero 2000-2009:",
+    mean(m$va_actl))
+cat("Desviación de las exportaciones productor FNC Enero 2000-2009:",
+    sd(m$va_actl))
+```
+
+En esta ocación se realizo dicho analísis a los meses del año 2000 quien deja un Promedio de las exportaciones de productores particulares en 96.09455 y una desviación estandar de 19.08774
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, eval=TRUE, comment="", include=TRUE}
+
+#Promedio y desviación del valor actual o estandarizado 
+#Exportaciones en el año 2000, productores particulares
+
+m <- val_pa %>%
+  filter(meses=='enero'| meses=='febrero' | meses=='marzo'
+         | meses=='abril'|meses=='mayo'
+         | meses=='junio' | meses=='julio' 
+         |meses=='agosto' | meses=='septiembre' 
+         | meses=='octubre' | meses=='noviembre' | meses=='diciembre') 
+cat("Promedio de las exportaciones productor particulares año 2000:",
+    mean(m$va_act))
+cat("Desviación de las exportaciones productor particulares año 2000:",
+    sd(m$va_act))
+```
+ 
+## Correlación Estadística
+
+Con los procedimientos antes realizados hemos podido observar las correlaciones que existen entre los valores de exportaciones tomados de la década del 2000 respecto a los valores estandarizados de dichas exportaciones tanto de la FNC como la de los productores particulares. En este análisis pudimos observar como los valores de exportación de la (FNC) Federación Nacional de Cafeteros en la década del 2000 comparado con estos mismos estandarizados en millones de dólares actualmente presentan una **correlación del -0.7057151** dejando como resultado un intervalo **alto de correlación negativa** lo cual demuestra o indica una relación indirecta y que para el caso de los productores particulares sucede todo lo contrario presentando una **alta correlación positiva del 0.9982397** indicando una relación directa. Esto nos demuestra como el café directa o indirectamente se ha envuelto en los distintos déficits o bonanzas que han tenido las regiones del país o de alguna manera afectaciones de la demanda en otros países.
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, eval=TRUE, comment="", include=TRUE}
+
+#correlación estadística de los valores de la fnc y particulares 2000-2021
+#entre los valores de exportación estandarizados 2022
+
+co1 <- cor(val_fnc$va_actl, val_fnc$va_ant)
+cat("Correlación Estadistíca FNC:", co1)
+co2 <- cor(val_pa$va_ex, val_pa$va_act)
+cat("Correlación Estadistíca de los particulares:", co2)
+
+```
+
+# Resultado y Conclusiones
+bfdb.  <
+Cómo resultado final las exportaciones del café colombiano han crecido considerablemente en las dos últimas décadas y que debido al incremento del dólar este ha inducido directamente en las exportaciones y que a pesar de los distintos periodos en los que la inflación afectó en gran medida la producción agrícola las exportaciones del café se prevé un buen índice de crecimiento en las exportaciones y consigo el mejoramiento del PIB  y claramente el fortalecimiento del agro colombiano.
+
+
+# Bibliografías
+
+https://federaciondecafeteros.org/wp/estadisticas-cafeteras/ 
+
+https://docs.google.com/spreadsheets/d/14nr3rsbWJ_OSRU6MyONyJWlUzLziLC5H/edit#gid=1280919490
+
+https://asoexport.org/cafe-de-colombia/
